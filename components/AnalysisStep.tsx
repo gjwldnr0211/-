@@ -345,6 +345,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                 "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
             );
             
+            // Attempt GPU first for better performance and to avoid CPU delegate initialization logs which confuse users
             try {
                 return await FaceLandmarker.createFromOptions(filesetResolver, {
                     baseOptions: {
@@ -369,6 +370,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
             }
         };
 
+        // Extended timeout to 15s to handle slower network connections for WASM files
         const timeoutPromise = new Promise((_, reject) => 
             window.setTimeout(() => reject(new Error("Model load timeout")), 15000)
         );
@@ -677,7 +679,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
       </div>
 
       {/* 3. Bottom Controls (Overlay with Gradient) */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 pt-12 pb-6 px-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+      <div className="absolute bottom-0 left-0 right-0 z-30 pt-12 pb-8 px-4 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
         
         {/* Manual Mode Hint (Centered above controls) */}
         {!customImage && manualMode && (
