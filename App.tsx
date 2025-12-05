@@ -73,13 +73,6 @@ const App: React.FC = () => {
             >
               {lang === 'ko' ? "거울 보고 시작하기" : "Start with Camera"}
             </button>
-            <p className="mt-4 text-xs text-slate-400">
-                {lang === 'ko' ? (
-                    <>카메라를 통해 내 얼굴형에 맞는<br/>최적의 스타일을 디자인해드립니다.</>
-                ) : (
-                    <>We design the optimal style for your<br/>face shape using the camera.</>
-                )}
-            </p>
           </div>
         );
       case AppStep.ANALYSIS:
