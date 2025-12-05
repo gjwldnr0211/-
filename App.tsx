@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppStep, StyleRecommendation, AnalysisOptions } from './types';
 import AnalysisStep from './components/AnalysisStep';
 import ResultCard from './components/ResultCard';
-import { Scissors, Globe } from 'lucide-react';
+import { Scissors } from 'lucide-react';
 
 const App: React.FC = () => {
   const [step, setStep] = useState<AppStep>(AppStep.WELCOME);
