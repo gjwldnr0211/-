@@ -8,6 +8,7 @@ import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 interface Props {
   onComplete: (recommendation: StyleRecommendation, imageBase64: string | null, options: AnalysisOptions) => void;
   lang: 'ko' | 'en';
+  gender: 'Male' | 'Female';
 }
 
 // --- TEMPLATE DEFINITIONS ---
@@ -305,14 +306,54 @@ const HAIR_COLORS = [
     { name: 'Violet', label: '바이올렛', labelEn: 'Violet', hex: '#a78bfa' },
 ];
 
-const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
+const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender }) => {
   const isEn = lang === 'en';
   
+  // Settings State - MOVED TO VISIBLE CONTROLS
+  // REMOVED internal gender state, using prop instead
+  const [currentLength, setCurrentLength] = useState<'Short' | 'Medium' | 'Long'>('Short');
+  const [targetColor, setTargetColor] = useState('Original');
+  
+  // THEME CONFIGURATION
+  const isFemale = gender === 'Female';
+  const getThemeClass = (type: string) => {
+    if (isFemale) {
+        // FEMALE THEME (ORANGE)
+        switch (type) {
+            case 'gradient': return 'bg-gradient-to-br from-orange-500 to-orange-600';
+            case 'shadow': return 'shadow-[0_0_10px_rgba(234,88,12,0.4)]';
+            case 'text': return 'text-orange-400';
+            case 'text-sub': return 'text-orange-400';
+            case 'border': return 'border-orange-500';
+            case 'mainBtn': return 'bg-gradient-to-b from-orange-500/90 to-orange-700/90 shadow-[0_4px_20px_rgba(234,88,12,0.4)] hover:shadow-[0_4px_25px_rgba(234,88,12,0.6)]';
+            case 'loadingBar': return 'bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500';
+            case 'scanLine': return 'bg-orange-500 shadow-[0_0_20px_rgba(234,88,12,0.8)]';
+            case 'spinner': return 'border-orange-500';
+            case 'colorActive': return 'border-orange-500 shadow-[0_0_15px_rgba(234,88,12,0.5)]';
+        }
+    } else {
+         // MALE THEME (NAVY/BLUE)
+        switch (type) {
+            case 'gradient': return 'bg-gradient-to-br from-blue-900 to-indigo-900';
+            case 'shadow': return 'shadow-[0_0_10px_rgba(30,58,138,0.4)]';
+            case 'text': return 'text-blue-400';
+            case 'text-sub': return 'text-blue-400';
+            case 'border': return 'border-blue-500';
+            case 'mainBtn': return 'bg-gradient-to-b from-blue-900/90 to-slate-900/90 shadow-[0_4px_20px_rgba(30,58,138,0.4)] hover:shadow-[0_4px_25px_rgba(30,58,138,0.6)]';
+            case 'loadingBar': return 'bg-gradient-to-r from-blue-800 via-indigo-600 to-slate-600';
+            case 'scanLine': return 'bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.8)]';
+            case 'spinner': return 'border-blue-500';
+            case 'colorActive': return 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]';
+        }
+    }
+    return '';
+  };
+
   const LOADING_STEPS = [
-    { text: isEn ? "Scanning face..." : "얼굴 윤곽 스캔 중...", subText: isEn ? "Analyzing Face Shape" : "Analyzing Face Shape", icon: <ScanFace className="w-8 h-8 text-teal-400" /> },
-    { text: isEn ? "Analyzing features..." : "이목구비 비율 분석...", subText: isEn ? "Calculating Features" : "Calculating Features", icon: <BrainCircuit className="w-8 h-8 text-blue-400" /> },
-    { text: isEn ? "Detecting skin tone..." : "퍼스널 컬러 진단 중...", subText: isEn ? "Detecting Skin Tone" : "Detecting Skin Tone", icon: <Palette className="w-8 h-8 text-rose-400" /> },
-    { text: isEn ? "Generating new look..." : "AI 스타일 합성 중...", subText: isEn ? "Generating New Look" : "Generating New Look", icon: <Sparkles className="w-8 h-8 text-purple-400" /> }
+    { text: isEn ? "Scanning face..." : "얼굴 윤곽 스캔 중...", subText: isEn ? "Analyzing Face Shape" : "Analyzing Face Shape", icon: <ScanFace className={`w-8 h-8 ${getThemeClass('text')}`} /> },
+    { text: isEn ? "Analyzing features..." : "이목구비 비율 분석...", subText: isEn ? "Calculating Features" : "Calculating Features", icon: <BrainCircuit className="w-8 h-8 text-slate-400" /> },
+    { text: isEn ? "Detecting skin tone..." : "퍼스널 컬러 진단 중...", subText: isEn ? "Detecting Skin Tone" : "Detecting Skin Tone", icon: <Palette className="w-8 h-8 text-slate-400" /> },
+    { text: isEn ? "Generating new look..." : "AI 스타일 합성 중...", subText: isEn ? "Generating New Look" : "Generating New Look", icon: <Sparkles className={`w-8 h-8 ${getThemeClass('text')}`} /> }
   ];
 
   const [loading, setLoading] = useState(false);
@@ -326,11 +367,6 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Settings State - MOVED TO VISIBLE CONTROLS
-  const [gender, setGender] = useState<'Male' | 'Female'>('Male');
-  const [currentLength, setCurrentLength] = useState<'Short' | 'Medium' | 'Long'>('Short');
-  const [targetColor, setTargetColor] = useState('Original');
-
   // AR State
   const [currentTemplateIdx, setCurrentTemplateIdx] = useState(0);
   
@@ -340,7 +376,10 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
   // Auto-Tracking State
   const [faceDetected, setFaceDetected] = useState(false);
   const [arStyle, setArStyle] = useState({ scale: 1, x: 50, y: 50 });
-  
+
+  // Hint State
+  const [showUploadHint, setShowUploadHint] = useState(true);
+
   // Refs for tracking loop
   const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const requestRef = useRef<number | null>(null);
@@ -579,6 +618,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                   const base64 = (event.target.result as string).split(',')[1];
                   setCustomImage(base64);
                   playSound('success');
+                  setShowUploadHint(false); // Hide hint on upload
               }
           };
           reader.readAsDataURL(file);
@@ -725,7 +765,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                     opacity: faceDetected ? 1 : 0.5 
                 }}
             >
-                <svg viewBox="0 0 320 350" className="w-full h-full text-white drop-shadow-[0_0_15px_rgba(13,148,136,0.6)]">
+                <svg viewBox="0 0 320 350" className="w-full h-full text-white drop-shadow-[0_0_15px_rgba(234,88,12,0.6)]">
                     <filter id="glow">
                         <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
                         <feMerge>
@@ -746,8 +786,8 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
          <div className="flex space-x-2 pointer-events-auto">
             {modelLoading && !customImage && (
                 <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full animate-fade-in">
-                    <Loader2 className="w-3 h-3 animate-spin text-teal-400" />
-                    <span className="text-xs text-teal-400 font-medium">
+                    <Loader2 className={`w-3 h-3 animate-spin ${getThemeClass('text')}`} />
+                    <span className={`text-xs ${getThemeClass('text')} font-medium`}>
                          {showManualFallback ? (isEn ? 'Delay...' : '로딩 지연...') : (isEn ? 'AI Loading' : 'AI 로딩')}
                     </span>
                     {showManualFallback && (
@@ -761,10 +801,42 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                 </div>
             )}
         </div>
+
+        {/* NEW: Top Right Photo Button with Hint */}
+        {/* CHANGED: Flex container for perfect vertical alignment of hint and button */}
+        <div className="pointer-events-auto relative z-50 mt-4 mr-2 flex items-center">
+             <input 
+                type="file" 
+                ref={fileInputRef}
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleFileUpload}
+            />
+            
+            {/* Hint Popup (To the left of the button) */}
+            {!customImage && showUploadHint && (
+                <div className="mr-3 animate-shake w-max origin-right flex items-center">
+                    <div className="bg-black/50 backdrop-blur-md text-white text-[11px] font-medium pl-3 pr-3 py-2 rounded-full border border-white/10 flex items-center relative">
+                        <span className="font-bold">{isEn ? "Upload example!" : "하고싶은 머리 사진을 올려보세요!"}</span>
+                        {/* Arrow (Pointing Right) - Absolute relative to the popup box */}
+                        <div className="absolute top-1/2 right-[-6px] -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[6px] border-l-black/50"></div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Photo Button (Liquid Glass Circle) */}
+            <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-xl text-slate-200 w-12 h-12 rounded-full hover:bg-white/20 hover:text-white active:scale-95 transition-all border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+            >
+                <ImagePlus size={20} />
+                <span className="text-[9px] mt-0.5">{isEn ? "Photo" : "사진"}</span>
+            </button>
+        </div>
       </div>
 
       {/* 3. Bottom Controls (Overlay with Gradient) */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 pt-12 safe-bottom px-4 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
+      <div className="absolute bottom-0 left-0 right-0 z-30 pt-12 pb-8 safe-bottom px-4 bg-gradient-to-t from-black/90 via-black/70 to-transparent">
         
         {/* Manual Mode Hint (Centered above controls) */}
         {!customImage && manualMode && (
@@ -775,39 +847,26 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
             </div>
         )}
 
-        {/* 1. Control Row (Gender & Length) */}
+        {/* 1. Control Row (Length Only - Gender Removed) - LIQUID GLASS STYLE */}
         <div className="flex justify-between items-center gap-2 mb-3">
-            <div className="flex bg-black/50 backdrop-blur-md rounded-xl p-1 border border-white/10">
-                <button 
-                    onClick={() => { setGender('Male'); playSound('click'); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${gender === 'Male' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                >
-                    {isEn ? 'Male' : '남성'}
-                </button>
-                <button 
-                    onClick={() => { setGender('Female'); playSound('click'); }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${gender === 'Female' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
-                >
-                    {isEn ? 'Female' : '여성'}
-                </button>
-            </div>
+            {/* Gender Selection REMOVED from here */}
             
-            <div className="flex bg-black/50 backdrop-blur-md rounded-xl p-1 border border-white/10 flex-1 justify-between">
+            <div className="flex bg-white/5 backdrop-blur-xl rounded-2xl p-1 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] flex-1 justify-between">
                 <button 
                     onClick={() => { setCurrentLength('Short'); playSound('click'); }}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLength === 'Short' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 relative overflow-hidden ${currentLength === 'Short' ? `${getThemeClass('gradient')} text-white ${getThemeClass('shadow')} border border-white/20` : 'text-white/60 hover:text-white hover:bg-white/5'}`}
                 >
                     Short
                 </button>
                 <button 
                     onClick={() => { setCurrentLength('Medium'); playSound('click'); }}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLength === 'Medium' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 relative overflow-hidden ${currentLength === 'Medium' ? `${getThemeClass('gradient')} text-white ${getThemeClass('shadow')} border border-white/20` : 'text-white/60 hover:text-white hover:bg-white/5'}`}
                 >
                     Medium
                 </button>
                 <button 
                     onClick={() => { setCurrentLength('Long'); playSound('click'); }}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLength === 'Long' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 relative overflow-hidden ${currentLength === 'Long' ? `${getThemeClass('gradient')} text-white ${getThemeClass('shadow')} border border-white/20` : 'text-white/60 hover:text-white hover:bg-white/5'}`}
                 >
                     Long
                 </button>
@@ -821,7 +880,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                     key={color.name}
                     onClick={() => { setTargetColor(color.name); playSound('click'); }}
                     className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all relative border-2 
-                        ${targetColor === color.name ? 'border-primary scale-110 shadow-[0_0_10px_rgba(20,184,166,0.5)]' : 'border-white/20 opacity-70 hover:opacity-100'}
+                        ${targetColor === color.name ? `${getThemeClass('colorActive')} scale-110` : 'border-white/20 opacity-70 hover:opacity-100'}
                     `}
                     style={{ backgroundColor: color.hex }}
                 >
@@ -835,8 +894,8 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
             ))}
         </div>
 
-        {/* Style Selector Carousel */}
-        <div className="flex items-center justify-between px-2 bg-black/40 backdrop-blur-md rounded-2xl py-2 border border-white/10 mb-3">
+        {/* Style Selector Carousel - LIQUID GLASS STYLE */}
+        <div className="flex items-center justify-between px-2 bg-white/5 backdrop-blur-xl rounded-2xl py-2 border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] mb-3">
             {!customImage && activeTemplates.length > 0 && (
                 <button onClick={() => changeTemplate(-1)} className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors active:scale-95">
                     <ChevronLeft size={24} />
@@ -847,12 +906,12 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                 {customImage ? (
                     <div className="text-center animate-fade-in">
                          <h3 className="text-base font-bold text-white mb-0.5">{isEn ? 'Uploaded Style' : '업로드된 스타일'}</h3>
-                         <p className="text-[10px] text-teal-400">{isEn ? 'Applying style from photo' : '사진의 머리를 적용합니다'}</p>
+                         <p className={`text-[10px] ${getThemeClass('text-sub')}`}>{isEn ? 'Applying style from photo' : '사진의 머리를 적용합니다'}</p>
                     </div>
                 ) : activeTemplates.length > 0 ? (
                     <div className="text-center animate-fade-in" key={currentTemplate.id}>
                         <h3 className="text-base font-bold text-white mb-0.5">{isEn ? currentTemplate.nameEn : currentTemplate.name}</h3>
-                        <p className="text-[10px] text-teal-400">{isEn ? currentTemplate.descriptionEn : currentTemplate.description}</p>
+                        <p className={`text-[10px] ${getThemeClass('text-sub')}`}>{isEn ? currentTemplate.descriptionEn : currentTemplate.description}</p>
                     </div>
                 ) : (
                      <div className="text-center">
@@ -870,29 +929,15 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex space-x-3 mb-6">
-             <input 
-                type="file" 
-                ref={fileInputRef}
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleFileUpload}
-            />
-            <button 
-                onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-sm text-slate-300 w-16 rounded-2xl hover:bg-white/20 active:scale-95 transition-all border border-white/5"
-            >
-                <ImagePlus size={24} className="mb-1" />
-                <span className="text-[10px]">{isEn ? "Photo" : "사진"}</span>
-            </button>
-
+        <div className="flex space-x-3 mb-6 items-end">
+            {/* Main Action Button (Liquid Glass Gradient) */}
             <button
             onClick={handleAnalyze}
             disabled={loading || !canProceed}
-            className={`flex-1 font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2
+            className={`flex-1 font-bold h-14 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center space-x-2 border border-white/20
                 ${loading || !canProceed
-                    ? 'bg-slate-800/80 text-slate-500 cursor-not-allowed border border-white/5' 
-                    : 'bg-primary hover:bg-teal-500 text-white shadow-teal-900/50'}`}
+                    ? 'bg-white/5 backdrop-blur-md text-slate-400 cursor-not-allowed border-white/10' 
+                    : `${getThemeClass('mainBtn')} backdrop-blur-md text-white`}`}
             >
             {loading ? (
                 <>
@@ -924,12 +969,12 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm animate-fade-in p-8">
             {/* Scan Line Effect */}
             <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
-                <div className="w-full h-1 bg-teal-500 shadow-[0_0_20px_rgba(20,184,166,0.8)] animate-scan"></div>
+                <div className={`w-full h-1 ${getThemeClass('scanLine')} animate-scan`}></div>
             </div>
 
             {/* Central Spinner */}
             <div className="relative mb-8">
-                <div className="w-24 h-24 rounded-full border-t-2 border-l-2 border-teal-500 animate-spin absolute inset-0"></div>
+                <div className={`w-24 h-24 rounded-full border-t-2 border-l-2 ${getThemeClass('spinner')} animate-spin absolute inset-0`}></div>
                 <div className="w-24 h-24 rounded-full border-b-2 border-r-2 border-purple-500 animate-spin absolute inset-0" style={{ animationDirection: 'reverse', animationDuration: '3s' }}></div>
                 <div className="w-24 h-24 flex items-center justify-center bg-slate-900 rounded-full shadow-2xl relative z-10 border border-slate-800">
                     <div className="animate-pulse">
@@ -943,7 +988,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
                 <h3 className="text-xl font-bold text-white animate-pulse">
                     {LOADING_STEPS[loadingStepIndex].text}
                 </h3>
-                <p className="text-teal-400/80 text-xs tracking-wider uppercase font-medium">
+                <p className={`text-xs tracking-wider uppercase font-medium ${getThemeClass('text-sub')}`}>
                     {LOADING_STEPS[loadingStepIndex].subText}
                 </p>
             </div>
@@ -951,7 +996,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang }) => {
             {/* Progress Bar */}
             <div className="w-full max-w-xs h-1.5 bg-slate-800 rounded-full overflow-hidden mt-8 z-10 border border-slate-700/50">
                 <div 
-                    className="h-full bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 transition-all duration-500 ease-out shadow-[0_0_10px_rgba(168,85,247,0.5)]"
+                    className={`h-full ${getThemeClass('loadingBar')} transition-all duration-500 ease-out shadow-[0_0_10px_rgba(234,88,12,0.5)]`}
                     style={{ width: `${((loadingStepIndex + 1) / LOADING_STEPS.length) * 100}%` }}
                 ></div>
             </div>

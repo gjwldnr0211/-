@@ -87,8 +87,8 @@ const SalonFinder: React.FC<Props> = ({ styleName, onBack }) => {
             ) : (
                 <div className="space-y-6">
                     {/* Intro */}
-                    <div className="bg-teal-50 p-4 rounded-xl border border-teal-100">
-                        <p className="text-sm text-teal-800 font-medium leading-relaxed">
+                    <div className="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                        <p className="text-sm text-orange-800 font-medium leading-relaxed">
                             {result?.text.split('\n')[0]} {/* Show just the intro summary */}
                         </p>
                     </div>

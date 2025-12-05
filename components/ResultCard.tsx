@@ -297,7 +297,7 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
 
                         <button 
                             onClick={handleUpdateStyle}
-                            className="w-full py-3 bg-teal-600 text-white rounded-xl font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-orange-600 text-white rounded-xl font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
                             <RefreshCcw className="w-4 h-4" />
                             {isEn ? "Apply Style" : "스타일 적용하기"}
@@ -368,12 +368,12 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
                      </button>
 
                      {/* Order Script */}
-                     <div className="p-4 bg-white rounded-2xl border border-teal-100 shadow-sm mt-4">
+                     <div className="p-4 bg-white rounded-2xl border border-orange-100 shadow-sm mt-4">
                         <div className="flex justify-between items-center mb-2">
-                            <p className="text-xs font-bold text-teal-800 uppercase tracking-wider">{isEn ? "Order Script" : "미용사 전달 멘트"}</p>
-                            <ShieldCheck className="w-4 h-4 text-teal-600" />
+                            <p className="text-xs font-bold text-orange-800 uppercase tracking-wider">{isEn ? "Order Script" : "미용사 전달 멘트"}</p>
+                            <ShieldCheck className="w-4 h-4 text-orange-600" />
                         </div>
-                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line border-l-2 border-teal-200 pl-3">
+                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line border-l-2 border-orange-200 pl-3">
                             "{result.description}"
                         </p>
                      </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AppStep, StyleRecommendation, AnalysisOptions } from './types';
 import AnalysisStep from './components/AnalysisStep';
 import ResultCard from './components/ResultCard';
-import { Scissors } from 'lucide-react';
+import { Scissors, User, UserCheck, X } from 'lucide-react';
 
 const App: React.FC = () => {
   const [step, setStep] = useState<AppStep>(AppStep.WELCOME);
@@ -12,6 +12,10 @@ const App: React.FC = () => {
   
   // Language State for Welcome Screen
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
+  
+  // Gender State for Modal
+  const [showGenderModal, setShowGenderModal] = useState(false);
+  const [selectedGender, setSelectedGender] = useState<'Male' | 'Female'>('Female');
 
   const handleAnalysisComplete = (data: StyleRecommendation, image: string | null, options: AnalysisOptions) => {
     setResult(data);
@@ -25,13 +29,24 @@ const App: React.FC = () => {
     setUserImage(null);
     setAnalysisOptions(undefined);
     setStep(AppStep.WELCOME);
+    setShowGenderModal(false);
+  };
+
+  const handleStart = () => {
+      setShowGenderModal(true);
+  };
+
+  const selectGenderAndProceed = (gender: 'Male' | 'Female') => {
+      setSelectedGender(gender);
+      setShowGenderModal(false);
+      setStep(AppStep.ANALYSIS);
   };
 
   const renderContent = () => {
     switch (step) {
       case AppStep.WELCOME:
         return (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fade-in relative">
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-fade-in relative z-10">
             {/* Language Toggle */}
             <div className="absolute top-6 right-6 flex bg-slate-200 p-1 rounded-full shadow-inner">
                 <button 
@@ -48,7 +63,7 @@ const App: React.FC = () => {
                 </button>
             </div>
 
-            <div className="w-24 h-24 bg-teal-100 rounded-full flex items-center justify-center mb-8 shadow-inner">
+            <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-8 shadow-inner">
                 <Scissors className="w-12 h-12 text-primary" />
             </div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">SafeCut AI</h1>
@@ -68,7 +83,7 @@ const App: React.FC = () => {
               )}
             </p>
             <button
-              onClick={() => setStep(AppStep.ANALYSIS)}
+              onClick={handleStart}
               className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl active:scale-95 transition-transform"
             >
               {lang === 'ko' ? "거울 보고 시작하기" : "Start with Camera"}
@@ -76,7 +91,7 @@ const App: React.FC = () => {
           </div>
         );
       case AppStep.ANALYSIS:
-        return <AnalysisStep onComplete={handleAnalysisComplete} lang={lang} />;
+        return <AnalysisStep onComplete={handleAnalysisComplete} lang={lang} gender={selectedGender} />;
       case AppStep.RESULT:
         return result && (
             <ResultCard 
@@ -93,7 +108,7 @@ const App: React.FC = () => {
   };
 
   return (
-    // Main app container - using h-full to support mobile webview constraints
+    // Main app container
     <div className="max-w-md mx-auto h-full bg-slate-50 shadow-2xl overflow-hidden relative">
       <div className="absolute top-0 left-0 w-full h-1 bg-gray-200 z-10">
         <div 
@@ -101,7 +116,43 @@ const App: React.FC = () => {
             style={{ width: `${((step + 1) / 3) * 100}%` }}
         />
       </div>
+      
       {renderContent()}
+
+      {/* Liquid Glass Gender Selection Modal */}
+      {showGenderModal && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fade-in">
+              <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-[2rem] p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] flex flex-col items-center relative">
+                  <button 
+                      onClick={() => setShowGenderModal(false)}
+                      className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors"
+                  >
+                      <X className="w-6 h-6" />
+                  </button>
+
+                  <h2 className="text-2xl font-bold text-white mb-2">{lang === 'ko' ? "성별 선택" : "Select Gender"}</h2>
+                  <p className="text-white/60 text-sm mb-8 text-center">{lang === 'ko' ? "정확한 AI 분석을 위해 선택해주세요." : "Please select for accurate AI analysis."}</p>
+
+                  <div className="w-full space-y-4">
+                      <button 
+                          onClick={() => selectGenderAndProceed('Female')}
+                          className="w-full h-16 rounded-2xl bg-gradient-to-r from-orange-500/80 to-pink-500/80 hover:from-orange-500 hover:to-pink-500 border border-white/20 shadow-lg flex items-center justify-center space-x-3 text-white font-bold text-lg active:scale-95 transition-all"
+                      >
+                          <User className="w-6 h-6" />
+                          <span>{lang === 'ko' ? "여성 (Female)" : "Female"}</span>
+                      </button>
+
+                      <button 
+                          onClick={() => selectGenderAndProceed('Male')}
+                          className="w-full h-16 rounded-2xl bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-600 hover:to-indigo-600 border border-white/20 shadow-lg flex items-center justify-center space-x-3 text-white font-bold text-lg active:scale-95 transition-all"
+                      >
+                          <UserCheck className="w-6 h-6" />
+                          <span>{lang === 'ko' ? "남성 (Male)" : "Male"}</span>
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
     </div>
   );
 };

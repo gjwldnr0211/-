@@ -1,5 +1,5 @@
 {
-  "name": "Hair Stylist",
+  "name": "SafecutAI",
   "description": "AI 기반 헤어스타일 추천 및 가상 시뮬레이션 서비스",
   "requestFramePermissions": [
     "camera",
