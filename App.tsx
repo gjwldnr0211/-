@@ -67,10 +67,12 @@ const App: React.FC = () => {
 
   const handleInviteFriend = () => {
       playSound('click');
-      // Simulate invite sharing with Web Share API (supports KakaoTalk natively on mobile)
+      // Updated Message: Longer, persuasive, and safety-focused (approx 150 chars)
       const shareData = {
           title: 'SafeCut AI',
-          text: isEn ? 'Check out this AI hairstyle app!' : '머리 자르기 전에 필수! AI로 내 인생 머리 미리 확인해봐. #SafeCutAI',
+          text: isEn 
+            ? "Wait! Are you heading to the salon? ✋ Don't risk expensive haircuts you might regret! 💸 Try SafeCut AI first to simulate your perfect look. Find your life-changing style in seconds. Test it now before you cut! 👇 #SafeCutAI" 
+            : "미용실 가기 전 필수! ✋ 설마 그냥 가시는 건 아니죠? 💸 비싼 돈 주고 머리 망하면 복구도 힘들잖아요. S컬 C컬 구구절절 설명할 필요 없이 디자이너에게 보여주기만 하면 끝! ✂️ 실패 없는 스타일 변신, 지금 바로 시뮬레이션 해보고 안전하게 미용실 가세요! 👇 #SafeCutAI",
           url: window.location.href
       };
 
@@ -93,12 +95,16 @@ const App: React.FC = () => {
   };
 
   const grantCredits = () => {
-      // CHANGED: Grant +3 credits instead of +1
+      // Grant +3 credits
       const newCredits = extraCredits + 3;
       setExtraCredits(newCredits);
       localStorage.setItem('safecut_credits', newCredits.toString());
       playSound('success');
-      // Alert removed to make it smoother, just close modal and proceed
+      
+      // ADDED: Visible notification for the user
+      // CHANGED: Removed "Free" wording
+      alert(isEn ? "Invitation successful! +3 credits added." : "초대 완료! 🎉\n이용권 3회가 즉시 추가되었습니다.");
+
       setShowLimitModal(false);
   };
 
@@ -184,7 +190,8 @@ const App: React.FC = () => {
             <div className="mb-6 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-200 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <span className="text-xs font-medium text-slate-600">
-                    {isEn ? `Free Left: ${remaining}` : `남은 무료 횟수: ${remaining}회`}
+                     {/* CHANGED: Removed "Free" wording */}
+                    {isEn ? `Credits Left: ${remaining}` : `남은 횟수: ${remaining}회`}
                 </span>
             </div>
 
@@ -358,12 +365,14 @@ const App: React.FC = () => {
                         <div className="absolute top-0 right-0 bg-red-500 w-5 h-5 rounded-full border-2 border-slate-900 shadow-md"></div>
                     </div>
 
+                     {/* CHANGED: Removed "Free" wording */}
                     <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
-                        {isEn ? "Daily Limit Reached" : "오늘 무료 횟수 마감"}
+                        {isEn ? "Daily Limit Reached" : "오늘 이용 횟수 마감"}
                     </h2>
                     <p className="text-white/70 text-sm mb-8 leading-relaxed">
+                         {/* CHANGED: Removed "Free" wording */}
                         {isEn ? 
-                            "Invite a friend and get +3 free credits instantly!" : 
+                            "Invite a friend and get +3 credits instantly!" : 
                             "친구에게 소개하고\n+3회 추가 이용권을 바로 받으세요!"}
                     </p>
 

@@ -31,9 +31,9 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
     Array.isArray(recommendations) ? recommendations[0] : recommendations
   );
   
-  // Adjustment States
-  const [length, setLength] = useState(0); // -1: Short, 0: Medium, 1: Long
-  const [curl, setCurl] = useState(0); // -1: Straight, 0: Natural, 1: Curly
+  // Adjustment States - INCREASED TO 5 STEPS (-2 to 2)
+  const [length, setLength] = useState(0); // -2: Very Short, -1: Short, 0: Medium, 1: Long, 2: Very Long
+  const [curl, setCurl] = useState(0); // -2: Very Straight, -1: Straight, 0: Natural, 1: Wavy, 2: Curly
   const [selectedColor, setSelectedColor] = useState(options?.targetColor || 'Original');
   
   const [isUpdating, setIsUpdating] = useState(false);
@@ -61,10 +61,18 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
 
     try {
         let modification = "";
-        if (length === -1) modification += isEn ? "short and neat " : "짧고 단정한 ";
-        if (length === 1) modification += isEn ? "long " : "길이감 있는 ";
-        if (curl === -1) modification += isEn ? "straight " : "직모 느낌의 ";
-        if (curl === 1) modification += isEn ? "curly " : "웨이브가 강한 펌 ";
+        
+        // Length Logic (5 Steps)
+        if (length === -2) modification += isEn ? "very short cropped " : "아주 짧은 크롭 스타일의 ";
+        else if (length === -1) modification += isEn ? "short and neat " : "짧고 단정한 ";
+        else if (length === 1) modification += isEn ? "long " : "길이감 있는 ";
+        else if (length === 2) modification += isEn ? "very long extended " : "아주 긴 기장의 ";
+
+        // Curl Logic (5 Steps)
+        if (curl === -2) modification += isEn ? "super sleek straight " : "매직 스트레이트한 ";
+        else if (curl === -1) modification += isEn ? "neat straight " : "차분한 생머리 느낌의 ";
+        else if (curl === 1) modification += isEn ? "voluminous wavy " : "볼륨감 있는 웨이브 ";
+        else if (curl === 2) modification += isEn ? "strong curly hippie " : "강한 히피펌 스타일의 ";
         
         const baseName = result.name.split(' (')[0]; 
         const newTargetStyle = `${modification}${baseName} (${isEn ? 'Length' : '길이'}: ${getLengthLabel(length)}, ${isEn ? 'Curl' : '컬'}: ${getCurlLabel(curl)})`;
@@ -205,14 +213,18 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
   };
 
   const getLengthLabel = (val: number) => {
+      if (val === -2) return isEn ? "Very Short" : "아주 짧게";
       if (val === -1) return isEn ? "Short" : "짧게";
       if (val === 1) return isEn ? "Long" : "길게";
+      if (val === 2) return isEn ? "Very Long" : "아주 길게";
       return isEn ? "Medium" : "적당히";
   };
 
   const getCurlLabel = (val: number) => {
-      if (val === -1) return isEn ? "Straight" : "단정하게";
-      if (val === 1) return isEn ? "Volume" : "볼륨있게";
+      if (val === -2) return isEn ? "Very Straight" : "완전 직모";
+      if (val === -1) return isEn ? "Straight" : "차분하게";
+      if (val === 1) return isEn ? "Wavy" : "웨이브";
+      if (val === 2) return isEn ? "Strong Curl" : "강한 컬";
       return isEn ? "Natural" : "자연스럽게";
   };
 
@@ -341,37 +353,43 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
                             </div>
                         </div>
 
+                        {/* Length Slider (5 Steps) */}
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="text-sm font-bold text-slate-500">{isEn ? "Length" : "길이"}</span>
                                 <span className="text-sm font-bold text-primary">{getLengthLabel(length)}</span>
                             </div>
                             <input 
-                                type="range" min="-1" max="1" step="1"
+                                type="range" min="-2" max="2" step="1"
                                 value={length} onChange={(e) => setLength(parseInt(e.target.value))}
                                 className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
                             />
                             <div className="flex justify-between mt-1 text-[10px] text-slate-400">
+                                <span>{isEn ? "V.Short" : "아주짧게"}</span>
                                 <span>{isEn ? "Short" : "짧게"}</span>
                                 <span>{isEn ? "Med" : "적당히"}</span>
                                 <span>{isEn ? "Long" : "길게"}</span>
+                                <span>{isEn ? "V.Long" : "아주길게"}</span>
                             </div>
                         </div>
 
+                        {/* Curl Slider (5 Steps) */}
                         <div>
                             <div className="flex justify-between mb-2">
                                 <span className="text-sm font-bold text-slate-500">{isEn ? "Curl" : "컬 (웨이브)"}</span>
                                 <span className="text-sm font-bold text-primary">{getCurlLabel(curl)}</span>
                             </div>
                             <input 
-                                type="range" min="-1" max="1" step="1"
+                                type="range" min="-2" max="2" step="1"
                                 value={curl} onChange={(e) => setCurl(parseInt(e.target.value))}
                                 className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary"
                             />
                             <div className="flex justify-between mt-1 text-[10px] text-slate-400">
-                                <span>{isEn ? "Flat" : "단정"}</span>
+                                <span>{isEn ? "Straight" : "완전직모"}</span>
+                                <span>{isEn ? "Neat" : "차분"}</span>
                                 <span>{isEn ? "Natural" : "자연"}</span>
-                                <span>{isEn ? "Curly" : "강하게"}</span>
+                                <span>{isEn ? "Wavy" : "웨이브"}</span>
+                                <span>{isEn ? "Curly" : "히피펌"}</span>
                             </div>
                         </div>
 
