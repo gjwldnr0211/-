@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AppStep, StyleRecommendation, AnalysisOptions } from './types';
 import AnalysisStep from './components/AnalysisStep';
 import ResultCard from './components/ResultCard';
-import { Scissors, User, UserCheck, X, Lock, Gift, Sparkles, MessageCircle } from 'lucide-react';
+import { Scissors, User, UserCheck, X, Lock, Gift, Sparkles, MessageCircle, ShieldCheck, FileText, Check } from 'lucide-react';
 import { playSound } from './utils/audio';
 
 const App: React.FC = () => {
@@ -15,7 +15,8 @@ const App: React.FC = () => {
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const isEn = lang === 'en';
   
-  // Gender State for Modal
+  // Modals State
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [selectedGender, setSelectedGender] = useState<'Male' | 'Female'>('Female');
 
@@ -24,8 +25,8 @@ const App: React.FC = () => {
   const [extraCredits, setExtraCredits] = useState(0);
   const [showLimitModal, setShowLimitModal] = useState(false);
 
-  // CHANGED: Daily limit reduced from 3 to 1
-  const MAX_DAILY_LIMIT = 1;
+  // CHANGED: Daily limit increased to 5
+  const MAX_DAILY_LIMIT = 5;
 
   useEffect(() => {
     // Initialize Usage Stats from LocalStorage
@@ -114,9 +115,17 @@ const App: React.FC = () => {
     setAnalysisOptions(undefined);
     setStep(AppStep.WELCOME);
     setShowGenderModal(false);
+    setShowPrivacyModal(false);
   };
 
   const handleStart = () => {
+      // Show Privacy Modal FIRST
+      setShowPrivacyModal(true);
+  };
+
+  const handlePrivacyAgree = () => {
+      playSound('click');
+      setShowPrivacyModal(false);
       setShowGenderModal(true);
   };
 
@@ -220,7 +229,76 @@ const App: React.FC = () => {
       
       {renderContent()}
 
-      {/* Gender Selection Modal */}
+      {/* 1. Privacy Consent Modal (First Step) */}
+      {showPrivacyModal && (
+          <div className="absolute inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md p-6 animate-fade-in">
+              <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-[2rem] p-6 shadow-2xl flex flex-col items-center relative max-h-[90vh] overflow-y-auto">
+                  
+                  <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4 border border-blue-400/30">
+                      <ShieldCheck className="w-8 h-8 text-blue-300" />
+                  </div>
+
+                  <h2 className="text-xl font-bold text-white mb-4 text-center">
+                      {isEn ? "Privacy & Usage Agreement" : "개인정보 수집 및 이용 동의"}
+                  </h2>
+
+                  <div className="w-full bg-black/20 rounded-xl p-4 mb-6 border border-white/5 space-y-3">
+                      <div className="flex gap-3">
+                          <Check className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                          <div className="text-xs text-slate-300 leading-relaxed text-left">
+                              <span className="text-white font-bold block mb-0.5">
+                                  {isEn ? "1. Face Data Collection" : "1. 얼굴 데이터 수집"}
+                              </span>
+                              {isEn 
+                                ? "We collect your photo solely to analyze face shape and generate hairstyle simulations." 
+                                : "헤어스타일 시뮬레이션을 위해 사용자의 얼굴이 포함된 사진을 사용합니다."}
+                          </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                          <Check className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                          <div className="text-xs text-slate-300 leading-relaxed text-left">
+                              <span className="text-white font-bold block mb-0.5">
+                                  {isEn ? "2. No Server Storage" : "2. 서버 저장 안 함 (즉시 파기)"}
+                              </span>
+                              {isEn 
+                                ? "Your photos are processed in real-time and deleted immediately. We do NOT store your face data." 
+                                : "업로드된 사진은 분석 후 즉시 삭제되며, 서버에 절대 저장되지 않습니다."}
+                          </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                          <Check className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                          <div className="text-xs text-slate-300 leading-relaxed text-left">
+                              <span className="text-white font-bold block mb-0.5">
+                                  {isEn ? "3. Third-Party Processing" : "3. 처리 위탁"}
+                              </span>
+                              {isEn 
+                                ? "Data is processed via Google Gemini API for AI generation only." 
+                                : "AI 생성을 위해 Google Gemini API를 통해 데이터가 처리됩니다."}
+                          </div>
+                      </div>
+                  </div>
+
+                  <button 
+                      onClick={handlePrivacyAgree}
+                      className="w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                      <FileText className="w-5 h-5" />
+                      <span>{isEn ? "Agree & Continue" : "동의하고 시작하기"}</span>
+                  </button>
+
+                  <button 
+                      onClick={() => setShowPrivacyModal(false)}
+                      className="mt-4 text-white/40 text-xs underline hover:text-white"
+                  >
+                      {isEn ? "Cancel" : "취소"}
+                  </button>
+              </div>
+          </div>
+      )}
+
+      {/* 2. Gender Selection Modal (Second Step) */}
       {showGenderModal && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fade-in">
               <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-[2rem] p-8 shadow-[0_8px_32px_0_rgba(31,38,135,0.37)] flex flex-col items-center relative">

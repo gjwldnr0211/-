@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StyleRecommendation, AnalysisOptions } from '../types';
 import { playSound } from '../utils/audio';
 import { analyzeHairStyle } from '../services/geminiService';
-import { MessageSquareOff, ShieldCheck, RefreshCcw, Settings2, RotateCcw, Info, Sparkles, Share2, Download, Palette, ScanFace, MapPin, ChevronRight, X, UserCheck, Instagram, Twitter, MessageCircle, Copy } from 'lucide-react';
+import { MessageSquareOff, ShieldCheck, RefreshCcw, Settings2, RotateCcw, Info, Sparkles, Share2, Download, Palette, MapPin, ChevronRight, X, UserCheck, Instagram, Twitter, MessageCircle, Copy } from 'lucide-react';
 
 interface Props {
   recommendations: StyleRecommendation[] | StyleRecommendation;
@@ -40,10 +40,10 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
   const [showControls, setShowControls] = useState(false);
   
   // Modals
-  const [showFaceAnalysis, setShowFaceAnalysis] = useState(false);
   const [showStylingGuide, setShowStylingGuide] = useState(false);
   const [showColorAnalysis, setShowColorAnalysis] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false); // NEW: Share Modal State
+  const [showOrderScript, setShowOrderScript] = useState(false); // Replaces FaceAnalysis
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // View State (Replaces Slider)
   const [activeView, setActiveView] = useState<'before' | 'after'>('after');
@@ -387,33 +387,14 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
             ) : (
                 /* Standard Details View */
                 <div className="p-5 flex-1 overflow-y-auto space-y-4 animate-fade-in bg-slate-50">
-                     {/* FACE SHAPE ANALYSIS BUTTON */}
-                     <button 
-                        onClick={() => {
-                            playSound('click');
-                            setShowFaceAnalysis(true);
-                        }}
-                        className="w-full bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center justify-between group hover:border-indigo-300 hover:shadow-md transition-all"
-                     >
-                        <div className="flex items-center gap-3">
-                            <div className="bg-indigo-50 p-2.5 rounded-full text-indigo-600 group-hover:bg-indigo-100 transition-colors">
-                                <ScanFace className="w-5 h-5" />
-                            </div>
-                            <div className="text-left">
-                                <h3 className="text-sm font-bold text-slate-800">{isEn ? "AI Face Analysis" : "AI 얼굴형 분석 리포트"}</h3>
-                                <p className="text-[11px] text-slate-500 font-medium">{isEn ? "Why this style fits you" : "내 얼굴형에 이 스타일이 어울리는 이유 보기"}</p>
-                            </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
-                     </button>
-
-                     {/* PERSONAL COLOR BUTTON (NEW) */}
+                     
+                     {/* PERSONAL COLOR BUTTON (First) */}
                      <button 
                         onClick={() => {
                             playSound('click');
                             setShowColorAnalysis(true);
                         }}
-                        className="w-full bg-white p-4 rounded-2xl border border-rose-100 shadow-sm flex items-center justify-between group hover:border-rose-300 hover:shadow-md transition-all mt-3"
+                        className="w-full bg-white p-4 rounded-2xl border border-rose-100 shadow-sm flex items-center justify-between group hover:border-rose-300 hover:shadow-md transition-all"
                      >
                         <div className="flex items-center gap-3">
                             <div className="bg-rose-50 p-2.5 rounded-full text-rose-600 group-hover:bg-rose-100 transition-colors">
@@ -427,7 +408,7 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
                         <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-rose-400 transition-colors" />
                      </button>
 
-                     {/* STYLING GUIDE BUTTON */}
+                     {/* STYLING GUIDE BUTTON (Second) */}
                      <button 
                         onClick={() => {
                             playSound('click');
@@ -447,16 +428,25 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
                         <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-orange-400 transition-colors" />
                      </button>
 
-                     {/* Order Script */}
-                     <div className="p-4 bg-white rounded-2xl border border-orange-100 shadow-sm mt-4">
-                        <div className="flex justify-between items-center mb-2">
-                            <p className="text-xs font-bold text-orange-800 uppercase tracking-wider">{isEn ? "Order Script" : "미용사 전달 멘트"}</p>
-                            <ShieldCheck className="w-4 h-4 text-orange-600" />
+                     {/* HAIRDRESSER ORDER SCRIPT BUTTON (Third - Replaces old Face Analysis position visually) */}
+                     <button 
+                        onClick={() => {
+                            playSound('click');
+                            setShowOrderScript(true);
+                        }}
+                        className="w-full bg-white p-4 rounded-2xl border border-indigo-100 shadow-sm flex items-center justify-between group hover:border-indigo-300 hover:shadow-md transition-all mt-3"
+                     >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-indigo-50 p-2.5 rounded-full text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                                <h3 className="text-sm font-bold text-slate-800">{isEn ? "Hairdresser Order" : "미용사 전달 멘트"}</h3>
+                                <p className="text-[11px] text-slate-500 font-medium">{isEn ? "Show this to your stylist" : "미용실에서 이대로 보여주세요"}</p>
+                            </div>
                         </div>
-                        <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line border-l-2 border-orange-200 pl-3">
-                            "{result.description}"
-                        </p>
-                     </div>
+                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-400 transition-colors" />
+                     </button>
                 </div>
             )}
         </div>
@@ -479,7 +469,7 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
 
         {/* --- MODALS SECTION --- */}
 
-        {/* SHARE MODAL (NEW) */}
+        {/* SHARE MODAL */}
         {showShareModal && (
             <div 
                 className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in p-4"
@@ -546,17 +536,17 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
             </div>
         )}
 
-        {/* FACE ANALYSIS MODAL */}
-        {showFaceAnalysis && (
+        {/* ORDER SCRIPT MODAL (New) */}
+        {showOrderScript && (
             <div 
                 className="absolute inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in p-4"
                 onClick={(e) => {
-                    if(e.target === e.currentTarget) setShowFaceAnalysis(false);
+                    if(e.target === e.currentTarget) setShowOrderScript(false);
                 }}
             >
                 <div className="bg-white w-full max-w-sm rounded-3xl p-6 relative animate-fade-in shadow-2xl mb-4 sm:mb-0">
                     <button 
-                        onClick={() => setShowFaceAnalysis(false)}
+                        onClick={() => setShowOrderScript(false)}
                         className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
                     >
                         <X className="w-5 h-5" />
@@ -564,28 +554,23 @@ const ResultCard: React.FC<Props> = ({ recommendations, userImage, onSelect, opt
                     
                     <div className="flex flex-col items-center text-center mb-6 pt-2">
                         <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-4 text-indigo-600 shadow-inner">
-                            <ScanFace className="w-8 h-8" />
+                            <ShieldCheck className="w-8 h-8" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-1">{isEn ? "Face Shape Analysis" : "AI 얼굴형 분석"}</h3>
-                        <p className="text-xs text-slate-400">Personalized Analysis</p>
-                        {result.faceShape && (
-                            <div className="mt-3 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md shadow-indigo-200">
-                                {isEn ? `${result.faceShape} Detected` : `${result.faceShape} 감지됨`}
-                            </div>
-                        )}
+                        <h3 className="text-xl font-bold text-slate-900 mb-1">{isEn ? "Order Script" : "미용사 전달 멘트"}</h3>
+                        <p className="text-xs text-slate-400">Professional Styling Order</p>
                     </div>
                     
                     <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 mb-6 text-left max-h-[40vh] overflow-y-auto">
                         <p className="text-sm text-slate-700 leading-relaxed font-medium whitespace-pre-line">
-                            {result.reason}
+                            "{result.description}"
                         </p>
                     </div>
                     
                     <button 
-                        onClick={() => setShowFaceAnalysis(false)}
+                        onClick={() => setShowOrderScript(false)}
                         className="w-full bg-slate-900 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform"
                     >
-                        {isEn ? "Got it" : "확인했습니다"}
+                        {isEn ? "Close" : "닫기"}
                     </button>
                 </div>
             </div>

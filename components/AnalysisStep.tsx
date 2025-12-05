@@ -369,7 +369,7 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // AR State
+  // AR State - Added rotation
   const [currentTemplateIdx, setCurrentTemplateIdx] = useState(0);
   
   // Custom Upload State
@@ -377,7 +377,14 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
   
   // Auto-Tracking State
   const [faceDetected, setFaceDetected] = useState(false);
-  const [arStyle, setArStyle] = useState({ scale: 1, x: 50, y: 50 });
+  const [arStyle, setArStyle] = useState({ 
+      scale: 1, 
+      x: 50, 
+      y: 50,
+      rotateX: 0,
+      rotateY: 0,
+      rotateZ: 0 
+  });
 
   // Hint State
   const [showUploadHint, setShowUploadHint] = useState(true);
@@ -521,14 +528,34 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
                     const leftEar = landmarks[234];
                     const rightEar = landmarks[454];
                     const topHead = landmarks[10];
-                    
+                    const chin = landmarks[152];
+                    const nose = landmarks[1];
+                    const leftEye = landmarks[33];
+                    const rightEye = landmarks[263];
+
+                    // 1. Position & Scale
                     const faceWidth = Math.sqrt(
                         Math.pow(rightEar.x - leftEar.x, 2) + 
                         Math.pow(rightEar.y - leftEar.y, 2)
                     );
-
                     const centerX = (leftEar.x + rightEar.x) / 2;
                     const centerY = topHead.y;
+
+                    // 2. 3D Rotation Calculation
+                    // Roll: Tilt head left/right (Z-axis) - Angle between eyes
+                    const dx = rightEye.x - leftEye.x;
+                    const dy = rightEye.y - leftEye.y;
+                    const roll = Math.atan2(dy, dx) * (180 / Math.PI);
+
+                    // Yaw: Turn head left/right (Y-axis) - Nose position relative to face width center
+                    const midEarX = (leftEar.x + rightEar.x) / 2;
+                    const yaw = ((nose.x - midEarX) / faceWidth) * 200; // Multiplier for sensitivity (approx 200 for degrees)
+
+                    // Pitch: Tilt head up/down (X-axis) - Nose relative to eye-chin height
+                    // Simple approximation: Nose vertical position
+                    const midEyeY = (leftEye.y + rightEye.y) / 2;
+                    const faceHeight = Math.abs(chin.y - topHead.y);
+                    const pitch = ((nose.y - midEyeY) / faceHeight - 0.3) * 150; // Normalize and scale
 
                     setArStyle(prev => {
                         const smoothFactor = 0.2;
@@ -540,7 +567,10 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
                         return {
                             scale: prev.scale + (targetScale - prev.scale) * smoothFactor,
                             x: prev.x + (targetX - prev.x) * smoothFactor,
-                            y: prev.y + (targetY - prev.y) * smoothFactor
+                            y: prev.y + (targetY - prev.y) * smoothFactor,
+                            rotateX: prev.rotateX + (pitch - prev.rotateX) * smoothFactor,
+                            rotateY: prev.rotateY + (yaw - prev.rotateY) * smoothFactor,
+                            rotateZ: prev.rotateZ + (roll - prev.rotateZ) * smoothFactor
                         };
                     });
                 } else {
@@ -773,7 +803,8 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
                 style={{ 
                     left: `${arStyle.x}%`,
                     top: `${arStyle.y}%`,
-                    transform: `translate(-50%, -20%) scale(${arStyle.scale})`,
+                    // Applied 3D perspective and rotation
+                    transform: `translate(-50%, -20%) perspective(800px) rotateX(${arStyle.rotateX}deg) rotateY(${arStyle.rotateY}deg) rotateZ(${arStyle.rotateZ}deg) scale(${arStyle.scale})`,
                     width: '300px', 
                     height: '350px',
                     opacity: faceDetected ? 1 : 0.5 
@@ -795,15 +826,16 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
         )}
       </div>
 
-      {/* 2. Top Bar (Overlay) */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-4 pt- safe-top flex justify-between items-center h-24 pointer-events-none">
-         <div className="flex space-x-2 pointer-events-auto">
-            {/* HOME BUTTON (New) */}
+      {/* 2. Top Bar (Overlay) - MODIFIED: Padding and Layout */}
+      {/* Changed padding to p-8 to move buttons away from corners */}
+      <div className="absolute top-0 left-0 right-0 z-30 p-8 pt- safe-top flex justify-between items-start h-auto pointer-events-none">
+         <div className="flex items-center space-x-4 pointer-events-auto mt-2 ml-2">
+            {/* HOME BUTTON (New Size: w-16 h-16) */}
             <button 
                 onClick={onHome}
-                className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-xl text-slate-200 w-10 h-10 rounded-full hover:bg-white/20 hover:text-white active:scale-95 transition-all border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] mr-2"
+                className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-xl text-slate-200 w-16 h-16 rounded-full hover:bg-white/20 hover:text-white active:scale-95 transition-all border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
             >
-                <Home size={18} />
+                <Home size={28} />
             </button>
 
             {modelLoading && !customImage && (
@@ -824,9 +856,8 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
             )}
         </div>
 
-        {/* NEW: Top Right Photo Button with Hint */}
-        {/* CHANGED: Flex container for perfect vertical alignment of hint and button */}
-        <div className="pointer-events-auto relative z-50 mt-4 mr-2 flex items-center">
+        {/* Top Right Photo Button with Hint */}
+        <div className="pointer-events-auto relative z-50 mt-2 mr-2 flex items-center">
              <input 
                 type="file" 
                 ref={fileInputRef}
@@ -840,19 +871,19 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
                 <div className="mr-3 animate-shake w-max origin-right flex items-center">
                     <div className="bg-black/50 backdrop-blur-md text-white text-[11px] font-medium pl-3 pr-3 py-2 rounded-full border border-white/10 flex items-center relative">
                         <span className="font-bold">{isEn ? "Upload example!" : "하고싶은 머리 사진을 올려보세요!"}</span>
-                        {/* Arrow (Pointing Right) - Absolute relative to the popup box */}
+                        {/* Arrow (Pointing Right) */}
                         <div className="absolute top-1/2 right-[-6px] -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[6px] border-l-black/50"></div>
                     </div>
                 </div>
             )}
             
-            {/* Photo Button (Liquid Glass Circle) */}
+            {/* Photo Button - Enlarged to 1.5x (w-16 h-16) */}
             <button 
                 onClick={() => fileInputRef.current?.click()}
-                className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-xl text-slate-200 w-12 h-12 rounded-full hover:bg-white/20 hover:text-white active:scale-95 transition-all border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                className="flex flex-col items-center justify-center bg-white/10 backdrop-blur-xl text-slate-200 w-16 h-16 rounded-full hover:bg-white/20 hover:text-white active:scale-95 transition-all border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
             >
-                <ImagePlus size={20} />
-                <span className="text-[9px] mt-0.5">{isEn ? "Photo" : "사진"}</span>
+                <ImagePlus size={28} />
+                <span className="text-[10px] mt-0.5">{isEn ? "Photo" : "사진"}</span>
             </button>
         </div>
       </div>
