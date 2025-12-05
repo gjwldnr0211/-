@@ -590,9 +590,9 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
       const constraints = {
         video: { 
           facingMode: 'user',
-          // Optimize for mobile portrait to reduce cropping zoom
-          width: { ideal: 720 },
-          height: { ideal: 1280 }
+          // Use native 3:4 aspect ratio to maximize Field of View and prevent zooming
+          aspectRatio: { ideal: 0.75 }, 
+          width: { ideal: 1280 }
         }
       };
       
@@ -758,8 +758,8 @@ const AnalysisStep: React.FC<Props> = ({ onComplete, lang, gender, onHome, check
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
       
-      {/* 1. Zoomed-out Camera Container (Background) */}
-      <div className="absolute inset-0 top-0 bottom-0 w-full h-full z-0 transform scale-[0.95] rounded-[2rem] overflow-hidden origin-center shadow-2xl border border-white/10 bg-gray-900">
+      {/* 1. Camera Container (Full Screen) */}
+      <div className="absolute inset-0 top-0 bottom-0 w-full h-full z-0 overflow-hidden bg-black">
         <video 
           ref={videoRef}
           autoPlay 

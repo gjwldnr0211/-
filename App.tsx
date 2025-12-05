@@ -25,8 +25,8 @@ const App: React.FC = () => {
   const [extraCredits, setExtraCredits] = useState(0);
   const [showLimitModal, setShowLimitModal] = useState(false);
 
-  // CHANGED: Daily limit increased to 5
-  const MAX_DAILY_LIMIT = 5;
+  // CHANGED: Daily limit updated to 2
+  const MAX_DAILY_LIMIT = 2;
 
   useEffect(() => {
     // Initialize Usage Stats from LocalStorage
@@ -50,6 +50,7 @@ const App: React.FC = () => {
   }, []);
 
   const checkUsageLimit = (): boolean => {
+      // Strict check: If usage meets or exceeds limit, BLOCK immediately.
       if (usageCount < (MAX_DAILY_LIMIT + extraCredits)) {
           return true;
       }
@@ -92,8 +93,8 @@ const App: React.FC = () => {
   };
 
   const grantCredits = () => {
-      // CHANGED: Grant +1 credit instead of +2
-      const newCredits = extraCredits + 1;
+      // CHANGED: Grant +3 credits instead of +1
+      const newCredits = extraCredits + 3;
       setExtraCredits(newCredits);
       localStorage.setItem('safecut_credits', newCredits.toString());
       playSound('success');
@@ -136,6 +137,9 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
+    // Calculate remaining (prevent negative numbers)
+    const remaining = Math.max(0, (MAX_DAILY_LIMIT + extraCredits) - usageCount);
+
     switch (step) {
       case AppStep.WELCOME:
         return (
@@ -180,7 +184,7 @@ const App: React.FC = () => {
             <div className="mb-6 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-200 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" />
                 <span className="text-xs font-medium text-slate-600">
-                    {isEn ? `Free Left: ${(MAX_DAILY_LIMIT + extraCredits) - usageCount}` : `남은 무료 횟수: ${(MAX_DAILY_LIMIT + extraCredits) - usageCount}회`}
+                    {isEn ? `Free Left: ${remaining}` : `남은 무료 횟수: ${remaining}회`}
                 </span>
             </div>
 
@@ -359,8 +363,8 @@ const App: React.FC = () => {
                     </h2>
                     <p className="text-white/70 text-sm mb-8 leading-relaxed">
                         {isEn ? 
-                            "Invite a friend and get +1 free credit instantly!" : 
-                            "친구에게 소개하고\n+1회 추가 이용권을 바로 받으세요!"}
+                            "Invite a friend and get +3 free credits instantly!" : 
+                            "친구에게 소개하고\n+3회 추가 이용권을 바로 받으세요!"}
                     </p>
 
                     {/* Kakao Style Button */}
