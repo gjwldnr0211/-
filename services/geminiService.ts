@@ -1,9 +1,24 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { StyleRecommendation, AnalysisOptions } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Ensure API Key exists to prevent internal crashes
+const getApiKey = () => {
+    const key = process.env.API_KEY;
+    if (!key) {
+        console.error("API_KEY is missing in process.env");
+        // Fallback or empty string to allow initialization, though calls will fail gracefully later
+        return ""; 
+    }
+    return key;
+};
+
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export const getHairstyleFromImage = async (base64Image: string, lang: 'ko' | 'en' = 'ko'): Promise<{name: string, description: string}> => {
+    if (!process.env.API_KEY) {
+        throw new Error("API Key not configured");
+    }
+
     const modelId = "gemini-2.5-flash";
     const langInstruction = lang === 'en' ? "Answer in English." : "Answer in Korean.";
     
@@ -55,6 +70,9 @@ export const analyzeHairStyle = async (
   targetStyle: string,
   options?: AnalysisOptions
 ): Promise<StyleRecommendation> => {
+  if (!process.env.API_KEY) {
+      throw new Error("API Key not configured");
+  }
   
   const lang = options?.language || 'ko';
   const isEn = lang === 'en';

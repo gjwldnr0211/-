@@ -4,14 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>SafeCut AI</title>
+    <!-- Runtime Environment Config -->
+    <script>
+      // Load runtime config from config.json synchronously
+      (function() {
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "/config.json", false);
+          xhr.send(null);
+          if (xhr.status === 200) {
+            var config = JSON.parse(xhr.responseText);
+            // Map VITE_GEMINI_API_KEY to API_KEY for the app
+            window.process = { 
+              env: { 
+                API_KEY: config.VITE_GEMINI_API_KEY || '' 
+              } 
+            };
+          } else {
+            console.warn("Could not load config.json");
+            window.process = { env: {} };
+          }
+        } catch (e) {
+          console.warn("Error loading config.json", e);
+          window.process = { env: {} };
+        }
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: '#0d9488', // Teal 600 - Calming, professional
-              secondary: '#64748b', // Slate 500 - Neutral
+              primary: '#0d9488', // Teal 600
+              secondary: '#64748b', // Slate 500
               background: '#f8fafc', // Slate 50
             },
             fontFamily: {
@@ -39,23 +65,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
       body { font-family: 'Noto Sans KR', sans-serif; }
-      /* Prevent pull-to-refresh and elastic scrolling on mobile */
       body { overscroll-behavior-y: none; }
-      /* Handle safe area for notched devices */
       .safe-top { padding-top: env(safe-area-inset-top); }
       .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6"
+    "@mediapipe/tasks-vision": "https://aistudiocdn.com/@mediapipe/tasks-vision@^0.10.22-rc.20250304",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>
